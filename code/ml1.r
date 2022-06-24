@@ -122,3 +122,31 @@ fit1
 fake_new
 predict(fit1, new_data=fake_new)
 predict(fit1, new_data=fake_new, type='prob')
+
+# How Good is Our Model? ####
+
+# log loss
+
+library(yardstick)
+metric_set1 <- metric_set(mn_log_loss, roc_auc)
+
+mn_log_loss_vec(factor(c(TRUE), levels=c(TRUE, FALSE)), c(0.37))
+mn_log_loss_vec(factor(c(FALSE), levels=c(TRUE, FALSE)), c(0.37))
+mn_log_loss_vec(factor(c(FALSE), levels=c(TRUE, FALSE)), c(0.03))
+
+# Cross Validation ####
+
+cv1 <- vfold_cv(train, v=5, strata='Status')
+cv1
+cv1$splits[[1]]
+
+library(tune)
+val1 <- fit_resamples(flow1, resamples=cv1, metrics=metric_set1)
+val1
+val1$.metrics[[1]]
+val1$.metrics[[2]]
+
+val1 |> collect_metrics()
+
+# Parameter Tuning ####
+
