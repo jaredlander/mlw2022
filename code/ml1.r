@@ -97,5 +97,28 @@ linear_reg() |> set_engine('glmnet')
 rand_forest() |> set_engine('ranger')
 
 
-spec1 <- boost_tree(mode='classification') |> set_engine('xgboost')
 
+
+# Hastie, Tibshirani and Friedman
+# Hastie, Tibshirani, Whitten, Garrett
+
+
+spec1 <- boost_tree(mode='classification', trees=100, tree_depth=4) |>
+    set_engine('xgboost')
+spec1
+
+# Put Them Together ####
+
+library(workflows)
+
+flow1 <- workflow(preprocessor=rec1, spec=spec1)
+flow1
+
+# Train Our Model ####
+
+fit1 <- fit(flow1, data=train)
+fit1
+
+fake_new
+predict(fit1, new_data=fake_new)
+predict(fit1, new_data=fake_new, type='prob')
