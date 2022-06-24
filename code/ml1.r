@@ -220,3 +220,24 @@ predict(fit2, new_data=fake_new, type='prob')
 final2 <- last_fit(mod2, split=credit_split)
 final2
 final2 |> collect_metrics()
+
+
+# Visualize Model ####
+
+library(vip)
+fit2 |> extract_fit_engine() |> vip()
+fit2 |> extract_fit_engine() |> vip::vi_shap(train=rec1 |> prep() |> bake(new_data=train))
+
+
+library(vetiver)
+v <- vetiver_model(fit2, model_name='awesome_crediting')
+v
+
+temp_board <- pins::board_temp()
+vetiver_pin_write(temp_board, v)
+vetiver_write_plumber(board=temp_board, name='awesome_crediting')
+vetiver_write_docker(v)
+
+predict(fit2, new_data=fake_new, type='prob') |> bind_cols(fake_new)
+
+fake_new |> dplyr::slice(1) |> jsonlite::toJSON()
