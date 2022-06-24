@@ -50,15 +50,39 @@ library(recipes)
 
 train |> count(Home)
 
+train |>
+    summarize(across(where(is.factor), ~sum(is.na(.x))))
+
 recipe(Status ~ ., data=train) |>
-    step_factor2string(Home, Job) |>
+    themis::step_downsample(Status) |>
+    step_nzv(all_predictors()) |>
+    # step_impute_knn(Income) |>
+    # step_normalize(all_numeric_predictors()) |>
+    step_factor2string(Home, Job, Marital) |>
     step_mutate(Home=if_else(is.na(Home), 'Missing', Home)) |>
     step_mutate(Job=if_else(is.na(Job), 'Missing', Job)) |>
-    step_string2factor(Home, Job) |>
+    step_mutate(Marital=if_else(is.na(Marital), 'Missing', Marital)) |>
+    step_string2factor(Home, Job, Marital) |>
     # step_other(Home, other='misc') |>
     step_other(all_nominal_predictors(), other='misc') |>
     # step_dummy(Home, keep_original_cols=FALSE, one_hot=TRUE) |>
     # step_dummy(Job, one_hot=TRUE) |>
+    step_novel(all_nominal_predictors(), new_level='unseen') |>
     step_dummy(all_nominal_predictors(), one_hot=TRUE) |>
     prep() |>
     bake(new_data=NULL)
+
+
+rec1 <- recipe(Status ~ ., data=train) |>
+    themis::step_downsample(Status) |>
+    step_nzv(all_predictors()) |>
+    step_factor2string(Home, Job, Marital) |>
+    step_mutate(Home=if_else(is.na(Home), 'Missing', Home)) |>
+    step_mutate(Job=if_else(is.na(Job), 'Missing', Job)) |>
+    step_mutate(Marital=if_else(is.na(Marital), 'Missing', Marital)) |>
+    step_string2factor(Home, Job, Marital) |>
+    step_other(all_nominal_predictors(), other='misc') |>
+    step_novel(all_nominal_predictors(), new_level='unseen') |>
+    step_dummy(all_nominal_predictors(), one_hot=TRUE)
+rec1
+
