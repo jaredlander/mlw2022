@@ -86,3 +86,16 @@ rec1 <- recipe(Status ~ ., data=train) |>
     step_dummy(all_nominal_predictors(), one_hot=TRUE)
 rec1
 
+# Define the Model ####
+
+library(parsnip)
+
+boost_tree(mode='classification') |> set_engine('xgboost')
+boost_tree(mode='classification') |> set_engine('C5.0')
+boost_tree(mode='classification') |> set_engine('spark')
+linear_reg() |> set_engine('glmnet')
+rand_forest() |> set_engine('ranger')
+
+
+spec1 <- boost_tree(mode='classification') |> set_engine('xgboost')
+
