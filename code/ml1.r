@@ -150,3 +150,73 @@ val1 |> collect_metrics()
 
 # Parameter Tuning ####
 
+spec2 <- boost_tree(mode='classification', trees=500, tree_depth=5) |>
+    set_engine('xgboost')
+spec3 <- boost_tree(mode='classification', trees=600, tree_depth=10) |>
+    set_engine('xgboost')
+
+spec2 <- boost_tree(
+    mode='classification', trees=tune(), tree_depth=tune()
+) |>
+    set_engine('xgboost')
+spec2
+spec1
+
+flow2 <- flow1 |> update_model(spec2)
+flow2
+
+flow2 |>
+    parameters()
+flow2 |>
+    hardhat::extract_parameter_set_dials()
+
+library(dials)
+params2 <- flow2 |>
+    hardhat::extract_parameter_set_dials() |>
+    update(
+        trees=trees(c(50, 500)),
+        tree_depth=tree_depth(c(2, 8))
+    )
+params2$object
+
+450*7
+grid2 <- grid_random(params2, size=100)
+grid2
+
+options(tidymodels.dark = TRUE)
+
+tune2 <- tune_grid(
+    flow2,
+    resamples=cv1,
+    grid=grid2,
+    metrics=metric_set1,
+    control=control_grid(verbose=TRUE)
+)
+tune2
+tune2$.metrics[[1]] |>
+    arrange(trees, tree_depth)
+tune2 |> collect_metrics()
+
+tune2 |> autoplot()
+tune2 |> autoplot(metric='roc_auc')
+
+tune2 |> show_best(n=5, metric='roc_auc')
+
+tune2 |> select_best(metric='roc_auc')
+tune2 |> select_best(metric='mn_log_loss')
+
+tune2 |> select_by_one_std_err(metric='roc_auc', tree_depth)
+
+best_params_2 <- tune2 |> select_best(metric='roc_auc')
+best_params_2
+
+mod2 <- flow2 |> finalize_workflow(parameters=best_params_2)
+mod2
+
+
+fit2 <- fit(mod2, data=train)
+predict(fit2, new_data=fake_new, type='prob')
+
+final2 <- last_fit(mod2, split=credit_split)
+final2
+final2 |> collect_metrics()
